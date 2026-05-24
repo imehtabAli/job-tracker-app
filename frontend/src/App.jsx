@@ -8,7 +8,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import Navbar from "./components/Navbar";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import "./app.css";
+import "./App.css";
 
 const App = () => {
     return (
