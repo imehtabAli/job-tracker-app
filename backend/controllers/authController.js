@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 exports.register = async (req, res) => {
     try {
@@ -60,7 +61,6 @@ exports.forgotPassword = async (req, res) => {
         //     },
         // });
 
-        const dns = require("dns");
 
         dns.setDefaultResultOrder("ipv4first");
 
@@ -90,7 +90,7 @@ exports.forgotPassword = async (req, res) => {
         res.json({ message: "Reset link sent to your email" });
     } catch (err) {
         console.log("ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: err.message });
     }
 }
 
