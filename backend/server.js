@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 app.use(express.json());
-app.use(cors({origin: "http://localhost:5173"}));
+app.use(cors({origin: "https://job-tracker-app-virid.vercel.app/"}));
 connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
