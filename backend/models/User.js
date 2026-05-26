@@ -11,7 +11,9 @@ const userSchema = new mongoose.Schema({
     phoneNumber: {type: String},
     dateOfBirth: {type: Date},
     country: {type: String},
-    gender: {type: String, enum: ["Male", "Female", "Others"]}
+    gender: { type: String, enum: ["Male", "Female", "Others"], default: undefined },
+    resetPasswordToken: {type: String},
+    resetPasswordExpire: {type: Date},
 });
 
 module.exports = mongoose.model("User", userSchema);

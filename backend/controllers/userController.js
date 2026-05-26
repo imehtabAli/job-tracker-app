@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 exports.getMe = async (req, res) => {
     try {
@@ -27,6 +28,9 @@ exports.updateProfile = async (req, res) => {
 
 exports.changePassword = async (req, res) => {
     try {
+        console.log("change password hit");
+        console.log("body:", req.body);
+        console.log("user:", req.user);
         const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
         if (newPassword !== confirmNewPassword) {
@@ -38,15 +42,18 @@ exports.changePassword = async (req, res) => {
         }
 
         const user = await User.findById(req.user.id);
+        console.log("user found:", user ? "yes" : "no");
         const isMatch = await bcrypt.compare(currentPassword, user.password);
+        console.log("isMatch:", isMatch);
         if (!isMatch) return res.status(400).json({ message: "Current password is incorrect" });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         res.json({ message: "Password changed successfully" });
     } catch (err) {
+        console.log("ERROR:", err.message);
         res.status(500).json({ message: "Server error" });
     }
 }

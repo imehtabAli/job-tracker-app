@@ -40,12 +40,12 @@ const Register = () => {
                 <h2 className="auth-title">Register</h2>
                 {error && <p className="error-msg">{error}</p>}
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    <input className="auth-input" name="firstName" placeholder="First Name" onChange={handleChange} />
-                    <input className="auth-input" name="lastName" placeholder="Last Name" onChange={handleChange} />
-                    <input className="auth-input" name="userName" placeholder="Username" onChange={handleChange} />
-                    <input className="auth-input" name="email" placeholder="Email" onChange={handleChange} />
-                    <input className="auth-input" name="password" type="password" placeholder="Password" onChange={handleChange} />
-                    <input className="auth-input" name="confirmPassword" type="password" placeholder="Confirm Password" onChange={handleChange} />
+                    <input className="auth-input" name="firstName" placeholder="First Name" required onChange={handleChange} />
+                    <input className="auth-input" name="lastName" placeholder="Last Name" required onChange={handleChange} />
+                    <input className="auth-input" name="userName" placeholder="Username" required onChange={handleChange} />
+                    <input className="auth-input" name="email" placeholder="Email" required onChange={handleChange} />
+                    <input className="auth-input" name="password" type="password" placeholder="Password" required onChange={handleChange} />
+                    <input className="auth-input" name="confirmPassword" type="password" placeholder="Confirm Password" required onChange={handleChange} />
                     <button className="auth-btn" type="submit">Register</button>
                 </form>
                 <p className="auth-redirect">Already have an account? <span onClick={() => navigate("/login")}>Login</span></p>

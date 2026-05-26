@@ -49,7 +49,7 @@ exports.forgotPassword = async (req, res) => {
         const resetToken = crypto.randomBytes(32).toString("hex");
         user.resetPasswordToken = resetToken;
         user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
@@ -93,7 +93,6 @@ exports.forgotPassword = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 }
-
 exports.resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
@@ -114,14 +113,17 @@ exports.resetPassword = async (req, res) => {
 
         if (!user) return res.status(400).json({ message: "Invalid or expired reset token" });
 
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) return res.status(400).json({ message: "New password cannot be same as old password" });
+
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpire = undefined;
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         res.json({ message: "Password reset successfully" });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: err.message });
     }
 }

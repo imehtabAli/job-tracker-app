@@ -37,8 +37,8 @@ const Login = () => {
                 <h2 className="auth-title">Login</h2>
                 {error && <p className="error-msg">{error}</p>}
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    <input className="auth-input" name="email" placeholder="Email" onChange={handleChange} />
-                    <input className="auth-input" name="password" type="password" placeholder="Password" onChange={handleChange} />
+                    <input className="auth-input" name="email" placeholder="Email" required onChange={handleChange} />
+                    <input className="auth-input" name="password" type="password" placeholder="Password" required onChange={handleChange} />
                     <p className="auth-redirect">
                         <span onClick={() => navigate("/forgot-password")}>Forgot Password?</span>
                     </p>
