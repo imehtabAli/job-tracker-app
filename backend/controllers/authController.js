@@ -2,7 +2,9 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer")
+// const { Resend } = require("resend");
+// const { log } = require("console");
 
 exports.register = async (req, res) => {
     try {
@@ -32,15 +34,8 @@ exports.login = async (req, res) => {
     }
 }
 
-
 exports.forgotPassword = async (req, res) => {
     try {
-        console.log("forgot password hit");
-        console.log("email received:", req.body.email);
-        console.log("MAIL_USER:", process.env.MAIL_USER);
-        console.log("MAIL_PASS:", process.env.MAIL_PASS ? "exists" : "missing");
-        console.log("CLIENT_URL:", process.env.CLIENT_URL);
-
         const { email } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: "No user found with that email" });
@@ -52,10 +47,16 @@ exports.forgotPassword = async (req, res) => {
 
         const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS, // App Password, not your Gmail password
+            },
+        });
 
-        await resend.emails.send({
-            from: "onboarding@resend.dev",
+        await transporter.sendMail({
+            from: `"JobTracker" <${process.env.MAIL_USER}>`,
             to: user.email,
             subject: "Password Reset Request — JobTracker",
             html: `
@@ -73,7 +74,7 @@ exports.forgotPassword = async (req, res) => {
         console.log("ERROR:", err);
         res.status(500).json({ message: "Server error" });
     }
-}
+};
 
 exports.resetPassword = async (req, res) => {
     try {
