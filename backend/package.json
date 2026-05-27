@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -10,6 +11,7 @@
     "mongoose": "^9.6.2",
     "nodemailer": "^8.0.8",
     "nodemon": "^3.1.14",
-    "resend": "^6.12.4"
+    "resend": "^6.12.4",
+    "sib-api-v3-sdk": "^8.5.0"
   }
 }

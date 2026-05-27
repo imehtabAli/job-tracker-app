@@ -3,8 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer")
-// const { Resend } = require("resend");
-// const { log } = require("console");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
 exports.register = async (req, res) => {
     try {
@@ -35,44 +34,71 @@ exports.login = async (req, res) => {
 }
 
 exports.forgotPassword = async (req, res) => {
+    console.log("✅ forgotPassword hit");
+    console.log("body:", req.body);
+
     try {
         const { email } = req.body;
+
+        if (!email) {
+            console.log("❌ No email in body");
+            return res.status(400).json({ message: "Email is required" });
+        }
+
         const user = await User.findOne({ email });
+        console.log("user found:", user ? user.email : "NOT FOUND");
+
         if (!user) return res.status(404).json({ message: "No user found with that email" });
 
         const resetToken = crypto.randomBytes(32).toString("hex");
         user.resetPasswordToken = resetToken;
         user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
         await user.save({ validateBeforeSave: false });
+        console.log("✅ Token saved to user");
 
         const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+        console.log("resetLink:", resetLink);
+        console.log("BREVO_API_KEY:", process.env.BREVO_API_KEY ? "exists" : "❌ MISSING");
+        console.log("MAIL_USER:", process.env.MAIL_USER || "❌ MISSING");
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS, // App Password, not your Gmail password
-            },
-        });
+        // Respond immediately
+        res.json({ message: "If that email exists, a reset link has been sent" });
 
-        await transporter.sendMail({
-            from: `"JobTracker" <${process.env.MAIL_USER}>`,
-            to: user.email,
-            subject: "Password Reset Request — JobTracker",
-            html: `
-                <div style="font-family: Inter, sans-serif; max-width: 480px; margin: auto; padding: 32px; border-radius: 12px; border: 1px solid #eee;">
-                    <h2 style="color: #1a1a2e;">Reset Your Password</h2>
-                    <p style="color: #555;">You requested a password reset. Click the button below to reset it:</p>
-                    <a href="${resetLink}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #e94560; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset Password</a>
-                    <p style="color: #888; font-size: 13px;">This link expires in 15 minutes. If you didn't request this, ignore this email.</p>
-                </div>
-            `,
-        });
+        // Send email in background
+        try {
+            const client = SibApiV3Sdk.ApiClient.instance;
+            client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
+            const transEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
-        res.json({ message: "Reset link sent to your email" });
+            const emailPromise = transEmailApi.sendTransacEmail({
+                sender: { name: "Job Tracker App", email: process.env.MAIL_USER },
+                to: [{ email: user.email }],
+                subject: "Password Reset Request — JobTracker",
+                htmlContent: `
+                    <div style="font-family: Inter, sans-serif; max-width: 480px; margin: auto; padding: 32px; border-radius: 12px; border: 1px solid #eee;">
+                        <h2 style="color: #1a1a2e;">Reset Your Password</h2>
+                        <p style="color: #555;">You requested a password reset. Click the button below:</p>
+                        <a href="${resetLink}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #e94560; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset Password</a>
+                        <p style="color: #888; font-size: 13px;">This link expires in 15 minutes. If you didn't request this, ignore this email.</p>
+                    </div>
+                `,
+            });
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Email timeout after 10s")), 10000)
+            );
+
+            await Promise.race([emailPromise, timeoutPromise]);
+            console.log("✅ Reset email sent successfully to", user.email);
+        } catch (emailErr) {
+            console.log("❌ Background email error:", emailErr.message);
+        }
+
     } catch (err) {
-        console.log("ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        console.log("❌ ERROR:", err);
+        if (!res.headersSent) {
+            res.status(500).json({ message: "Server error" });
+        }
     }
 };
 
